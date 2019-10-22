@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	mf2 "github.com/andyleap/microformats"
 	"hawx.me/code/assert"
 )
 
@@ -83,7 +84,8 @@ func TestParse(t *testing.T) {
 
 			if len(data.Items) > 0 {
 				author := data.Items[0].Properties["author"][0]
-				assert.Equal(t, tc.Out, author)
+				props := author.(*mf2.MicroFormat).Properties
+				assert.Equal(t, tc.Out, props)
 			} else {
 				assert.Equal(t, tc.Out, nil)
 			}

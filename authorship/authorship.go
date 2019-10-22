@@ -26,7 +26,12 @@ func Find(data *mf2.Data, baseURL *url.URL) *mf2.Data {
 		if contains("h-entry", item.Type) {
 			author := FindForHEntry(data, item, baseURL)
 			if author != nil {
-				item.Properties["author"] = []interface{}{author}
+				item.Properties["author"] = []interface{}{
+					&mf2.MicroFormat{
+						Type:       []string{"h-card"},
+						Properties: author,
+					},
+				}
 			}
 		}
 	}
@@ -36,7 +41,7 @@ func Find(data *mf2.Data, baseURL *url.URL) *mf2.Data {
 
 // Find the author for the given hentry, replacing the author property with the
 // determined properties.
-func FindForHEntry(data *mf2.Data, hentry *mf2.MicroFormat, baseURL *url.URL) interface{} {
+func FindForHEntry(data *mf2.Data, hentry *mf2.MicroFormat, baseURL *url.URL) map[string][]interface{} {
 	// 1. start with a particular h-entry to determine authorship for, and no
 	//    author. if no h-entry, then there's no post to find authorship for,
 	//    abort.
