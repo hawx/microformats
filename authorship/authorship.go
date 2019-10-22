@@ -12,29 +12,36 @@ import (
 	mf2 "github.com/andyleap/microformats"
 )
 
-// Parse attempts to find the hcard of the author of a hentry.
-func Parse(r io.Reader, baseURL *url.URL) interface{} {
+// Parse r adding the author to all hentries found.
+func Parse(r io.Reader, baseURL *url.URL) *mf2.Data {
 	data := mf2.New().Parse(r, baseURL)
 
 	return Find(data, baseURL)
 }
 
-func Find(data *mf2.Data, baseURL *url.URL) interface{} {
+// Find the author for each hentry, replacing the author property with the
+// determined properties.
+func Find(data *mf2.Data, baseURL *url.URL) *mf2.Data {
+	for _, item := range data.Items {
+		if contains("h-entry", item.Type) {
+			author := FindForHEntry(data, item, baseURL)
+			if author != nil {
+				item.Properties["author"] = []interface{}{author}
+			}
+		}
+	}
 
+	return data
+}
+
+// Find the author for the given hentry, replacing the author property with the
+// determined properties.
+func FindForHEntry(data *mf2.Data, hentry *mf2.MicroFormat, baseURL *url.URL) interface{} {
 	// 1. start with a particular h-entry to determine authorship for, and no
 	//    author. if no h-entry, then there's no post to find authorship for,
 	//    abort.
 	//
 	// 2. parse the h-entry
-
-	var hentry *mf2.MicroFormat
-
-	for _, item := range data.Items {
-		if contains("h-entry", item.Type) {
-			hentry = item
-			break
-		}
-	}
 
 	if hentry == nil {
 		return nil
@@ -94,8 +101,9 @@ func Find(data *mf2.Data, baseURL *url.URL) interface{} {
 		if sURL, ok := hentry.Properties["url"][0].(string); ok && sURL == baseURL.String() {
 			//   a. if the page has a rel-author link, let the author-page's URL be the
 			//      href of the rel-author link
-
-			// TODO
+			if len(data.Rels["author"]) > 0 {
+				authorPage = data.Rels["author"][0]
+			}
 		}
 	}
 

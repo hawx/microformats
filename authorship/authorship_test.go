@@ -79,9 +79,14 @@ func TestParse(t *testing.T) {
 				defer resp.Body.Close()
 			}
 
-			author := Parse(r, sURL)
+			data := Parse(r, sURL)
 
-			assert.Equal(t, tc.Out, author)
+			if len(data.Items) > 0 {
+				author := data.Items[0].Properties["author"][0]
+				assert.Equal(t, tc.Out, author)
+			} else {
+				assert.Equal(t, tc.Out, nil)
+			}
 		})
 	}
 }
